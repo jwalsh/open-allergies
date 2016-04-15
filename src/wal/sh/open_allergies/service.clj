@@ -3,49 +3,90 @@
             [io.pedestal.http.route :as route]
             [io.pedestal.http.body-params :as body-params]
             [io.pedestal.http.route.definition :refer [defroutes]]
-            [ring.util.response :as ring-resp]))
+            [ring.util.response :as ring-resp]
+            [ring.middleware.json :refer [wrap-json-response]]
+            [clojure.data.json :as json]
+            [ring.util.response :as response]))
 
-(defn about-page
+(deftype Food [^String name ^String description ^Integer rake ^Boolean display_like ^Boolean display_dislike])
+
+(def CUISINES [:Italian
+               :Chinese
+               :Greek
+               :Asian
+               :French
+               :German
+               :Cuban
+               :British
+               :Thai
+               :Polish
+               :Moroccan
+               :Lebanese
+               :Japanese
+               :Indian
+               ])
+
+(def FOODS [:Juice
+            :Milk
+            :Beans
+            :Corn
+            :Apples
+            :Peas
+            :Tomatoes
+            :Pineapple
+            :Vegetables
+            :Grapes
+            :Oranges
+            :Butter
+            :Broccoli
+            :Peanuts
+            :Carrots
+            :Peas
+            :Tomatoes
+            :Raisins
+            :Corn
+            :Spinach
+            ])
+
+(defn transform-name-entity [name]
+  (let [entity {
+                 :created 0
+                 :updated 0
+                 :name name
+                }]
+    entity))
+
+(defn about-index
   [request]
   (ring-resp/response (format "Clojure %s - served from %s"
                               (clojure-version)
-                              (route/url-for ::about-page))))
+                              (route/url-for ::about-index))))
 
 (defn home-page
   [request]
-  (ring-resp/response "Hello World!"))
+  (ring-resp/response "Open Allergy"))
+
+(defn foods-list
+  [request]
+  (let [foods [{:name "Pizza"}]]
+    (ring-resp/response (json/write-str (map transform-name-entity FOODS)))))
+
+(defn cuisines-list
+  [request]
+  (ring-resp/response (json/write-str (map transform-name-entity CUISINES))))
+
+(defn allergies-list
+  [request]
+  (ring-resp/response [1 2 3]))
 
 (defroutes routes
-  ;; Defines "/" and "/about" routes with their associated :get handlers.
-  ;; The interceptors defined after the verb map (e.g., {:get home-page}
-  ;; apply to / and its children (/about).
-  [[["/" {:get home-page}
-     ^:interceptors [(body-params/body-params) bootstrap/html-body]
-     ["/about" {:get about-page}]]]])
+  [[["/" {:get about-index}
+     ["/foods" {:get foods-list}]
+     ["/cuisines" {:get cuisines-list}]]]])
 
-;; Consumed by wal.sh.open-allergies.server/create-server
-;; See bootstrap/default-interceptors for additional options you can configure
 (def service {:env :prod
-              ;; You can bring your own non-default interceptors. Make
-              ;; sure you include routing and set it up right for
-              ;; dev-mode. If you do, many other keys for configuring
-              ;; default interceptors will be ignored.
-              ;; ::bootstrap/interceptors []
               ::bootstrap/routes routes
-
-              ;; Uncomment next line to enable CORS support, add
-              ;; string(s) specifying scheme, host and port for
-              ;; allowed source(s):
-              ;;
-              ;; "http://localhost:8080"
-              ;;
-              ;;::bootstrap/allowed-origins ["scheme://host:port"]
-
-              ;; Root for resource interceptor that is available by default.
+              ::bootstrap/allowed-origins ["http://localhost:8080"]
               ::bootstrap/resource-path "/public"
-
-              ;; Either :jetty, :immutant or :tomcat (see comments in project.clj)
               ::bootstrap/type :jetty
-              ;;::bootstrap/host "localhost"
               ::bootstrap/port 8080})
-

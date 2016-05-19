@@ -12,7 +12,10 @@
                  [org.slf4j/log4j-over-slf4j "1.7.12"]
                  [org.clojure/data.json "0.2.6"]
                  [org.clojure/clojurescript "0.0-2760"]
+                 [org.clojure/clojurescript "1.7.228"]
+                 [datascript "0.15.0"]
                  [org.omcljs/om "0.9.0"]
+                 [re-frame "0.7.0"]
                  [ring/ring-json "0.4.0"]]
   :min-lein-version "2.0.0"
   :resource-paths ["config", "resources"]

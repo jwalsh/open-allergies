@@ -8,7 +8,15 @@
             [clojure.data.json :as json]
             [ring.util.response :as response]))
 
-(deftype Food [^String name ^String description ^Integer rake ^Boolean display_like ^Boolean display_dislike])
+(def ALLERGIES [:Milk
+                :Eggs
+                :Fish
+                :Shellfish
+                :TreeNuts
+                :Peanuts
+                :Wheat
+                :Soybean
+                ])
 
 (def CUISINES [:Italian
                :Chinese
@@ -48,11 +56,40 @@
             :Spinach
             ])
 
+(def DIETS [:AtkinsDiet
+            :TheZoneDiet
+            :VegetarianDiet
+            :VeganDiet
+            :WeightWatchersDiet
+            :SouthBeachDiet
+            :RawFoodDiet
+            :MediterraneanDiet
+            ])
+
+(defn epoch []
+  (int (/ (System/currentTimeMillis) 1000)))
+
+
+(defrecord Food [^String name ^String description ^Boolean popular ^Boolean display_like ^Boolean display_dislike])
+
+(doseq [f FOODS]
+  (hash f))
+
+;;(def numbers [2  4 3 4 3 2 4 7 6 6 5 7 6 5 5 4])
+;; (max-key count "asd" "bsd" "dsd" "long word")
+;; (reduce ( fn [a b x] (+ a b)) 0 numbers)
+;; (first (apply max-key second (map-indexed vector numbers)))
+;; (key (apply max-key val {:a 3 :b 7 :c 9 :d 3}))
+;; (apply val {:a 3})
+
+(defn transform-food [name]
+  (->Food name name true true true))
+
 (defn transform-name-entity [name]
   (let [entity {
-                 :created 0
-                 :updated 0
-                 :name name
+                :created (epoch)
+                :updated (epoch)
+                :name name
                 }]
     entity))
 
@@ -66,22 +103,31 @@
   [request]
   (ring-resp/response "Open Allergy"))
 
+(defn allergies-list
+  [request]
+  (ring-resp/response (json/write-str (map transform-name-entity ALLERGIES))))
+
 (defn foods-list
   [request]
-  (let [foods [{:name "Pizza"}]]
-    (ring-resp/response (json/write-str (map transform-name-entity FOODS)))))
+  (ring-resp/response (json/write-str (map transform-food FOODS))))
 
 (defn cuisines-list
   [request]
   (ring-resp/response (json/write-str (map transform-name-entity CUISINES))))
 
-(defn allergies-list
+(defn diets-list
   [request]
-  (ring-resp/response [1 2 3]))
+  (ring-resp/response (json/write-str (map transform-name-entity DIETS))))
+
+;; Issue with reload from the repl
+;; (defprotocol Draw)
+;; (defrecord Rectangle [width height] Draw)
 
 (defroutes routes
   [[["/" {:get about-index}
+     ["/allergies" {:get allergies-list}]
      ["/foods" {:get foods-list}]
+     ["/diets" {:get diets-list}]
      ["/cuisines" {:get cuisines-list}]]]])
 
 (def service {:env :prod
